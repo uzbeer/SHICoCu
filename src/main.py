@@ -3,7 +3,7 @@
 # Modules:
 #
 from lib.utils import *         # internal library
-import argparse, asyncio, os, time, unicodedata    # standard
+import asyncio, os, time, unicodedata    # standard
 #
 # from dotenv import load_dotenv  # ext: python-dotenv
 # (https://github.com/theskumar/python-dotenv)
@@ -93,7 +93,6 @@ def generate_cloud(df, filename: str):
     WordCloud = extmodule("wordcloud", "WordCloud")
     Counter = extmodule("collections", "Counter")
     Image =extmodule("PIL", "Image")
-    # ImageDraw =extmodule(PIL, "ImageDraw")
     np = extmodule("numpy")
 
     tokenizer = NLP()
@@ -136,7 +135,6 @@ async def __init_yt() -> str:
     await asyncio.sleep(2)
 
     yt_api_key = os.environ.get("YOUTUBE_API_KEY")
-    # DEBUG TBD print(len(yt_api_key))
     youtube = yt_builder("youtube", "v3", developerKey=yt_api_key)
 
 def welcome_msg(): # Print intro
@@ -157,7 +155,7 @@ def welcome_msg(): # Print intro
 
     os.makedirs("./data", exist_ok=True)
     os.makedirs("./output", exist_ok=True)
-    time.sleep(2)
+    time.sleep(.42)
 
     cy("\b\b\b\a Done!                ")
     rst("\n\n")
@@ -183,6 +181,7 @@ Optional flags:
     --store_raw [filename]      \033[3m Keep a backup of the fetched data \033[23m
     --store_results [filename]  \033[3m Saves the processed results data \033[23m
     --cloud [filename]          \033[3m Generates word cloud from the data \033[23m
+    --skip                      \033[3m Skip results generation, only store or read data \033[23m
     --limit <\033[3mn\033[23m>                 \033[3m Total amount of data/rows loaded \033[23m
 
 Concatenable flags:
@@ -298,7 +297,6 @@ NOTES:
 
 
     #spaCy pipe processing
-    # NOT LOAD RESULTS
     if not(df.is_empty()):
         pl.Config.set_fmt_str_lengths(340)
         pl.Config.set_tbl_formatting("UTF8_HORIZONTAL_ONLY")
@@ -313,14 +311,17 @@ NOTES:
 
 
         ####### PROCESSING #####
-        # Check if we were asked for --cloud, normal results, or to skip them
-        if ("--cloud" in par) or ("--skip" in par):
-            if ("--cloud" in par):
-                if (verbose):
-                    ora2("Starting words cloud generation...\n")
-                    rst()
-                generate_cloud(df, par("--cloud") or par("--id") or par("--file"))
+        # Check if we were asked for --cloud, normal results, or to skip them all
+        if ("--skip" in par):
             return
+        if ("--cloud" in par):
+            if (verbose):
+                ora2("Starting words cloud generation...\n")
+                rst()
+            generate_cloud(df, par("--cloud") or par("--id") or par("--file"))
+            return
+
+        # regular processing
         pipes = NLP(['sentencizer', 'asent_en_v1'])
 
         df = df.with_columns(
@@ -333,7 +334,6 @@ NOTES:
                 ]))
               .alias("to_be_exploded")
           ).unnest("to_be_exploded")
-              # .str.replace_all(r"[\p{So}\x{FE0F}\x{200D}\x{2600}-\x{27BF}]", "") # before .map
 
         df = df.with_columns(
               pl.col("text").map_elements(
@@ -362,9 +362,6 @@ NOTES:
                 pl.lit("ID: ") + pl.col("comment_id").cast(pl.String) + pl.lit("\n")
               ).alias("details"), pl.col("text")
           ]), file=bif)
-        # print(df.sort("compound", descending=True).head(10).select("comment_id", "text", "likeCount", "compound"), file=bif)
-        #                 pl.lit(": ") + pl.col().cast(pl.String) +pl.lit("\n") +
-
 
         ora("\nTop 10 negative posts\n", file=bif)
         rst(file=bif)
@@ -376,7 +373,6 @@ NOTES:
                 pl.lit("ID: ") + pl.col("comment_id").cast(pl.String) + pl.lit("\n")
               ).alias("details"), pl.col("text")
           ]), file=bif)
-        # print(df.sort("compound", descending=True).tail(10).select("comment_id", "text", "likeCount", "compound"), file=bif)
 
         ora("\nTop 10 most likely nonsense posts\n", file=bif)
         rst(file=bif)
@@ -389,7 +385,6 @@ NOTES:
                 pl.lit("ID: ") + pl.col("comment_id").cast(pl.String) + pl.lit("\n")
               ).alias("details"), pl.col("text")
           ]), file=bif)
-        # print(df.sort("nonsense_chance", descending=True, nulls_last=True).head(10).select("comment_id", "text", "nonsense_chance", "likeCount", "compound"), file=bif)
 
         ora("\nTop 10 most active posters\n", file=bif)
         rst(file=bif)

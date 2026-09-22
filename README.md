@@ -48,11 +48,30 @@ If an error shows up due to the /tmp allocation not being big enough, this could
 
 I tried using ``en_core_web__trf``instead (a larger model, around ``6GB``), but is crashes due to the use of pytorch legacy functions.
 
+# Required external libraries
+
+``dotenv`` (python-dotenv)
+``polars``
+``spaCy``
+``asent`` (spaCy sub-library)
+``googleapiclient.discovery`` (will require to generate a private API key)
+``PIL`` (Pillow)
+``numpy``
+``wordcloud``
+
+## Recommended usecases
+Once a video get enough comments, disable comments and download all the root comments as backup.
+
+
 ## Tentative Roadmap
 
 Features I might include in future versions:
-- Use Steam Reviews data
-- Use Twitch VODs chat data
-- Use videos subtitles/transcripts
+- Option to download nested replies (high API quota consumption)
+- Better moderation tools
+- Read data form Steam Reviews
+- Read data from Twitch VODs chat
+- Read videos subtitles/transcripts
 - Reports automation and ``cron`` examples
+- Include other languages
 - Custom NLP pipes
+- Custom cloud masks and colouring functions

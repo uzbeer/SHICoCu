@@ -74,26 +74,22 @@ class Parser:
         self.args = {}
         self.tokens = []
 
-        # print("\nArguments passed:", self.argv)
         self._loading_args()
 
     def __call__(self, key: str):
         return self.args.get(key)
 
     def __contains__(self, key):
-        try:
-            self.args.get(key)
-            return True
-        except (KeyError, IndexError):
-            return False
+        return key in self.args
 
     def _loading_args(self):
         i = 0
-        while i < (len(self.argv)):
+        max_index = len(self.argv)
+        while i < max_index:
             arg = self.argv[i]
             if arg.startswith("--"):
                 #It is a Keyword, check for assigned value
-                if self.argv[i+1].startswith("-"):
+                if i+1 >= max_index or self.argv[i+1].startswith("-"):
                     self.args[arg] = None
                 else:
                     i += 1
@@ -107,8 +103,6 @@ class Parser:
                 self.args[arg] = True
                 self.tokens.append(arg)
             i += 1
-        # cy(self.args, "\n")
-
 
 
 ###############
