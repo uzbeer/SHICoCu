@@ -24,7 +24,9 @@ _`S`emantic `H`arsh `I`nternet `Co`mment `Cu`ratory_
 ```prolog
       NOTICE: NO AI OR LLMS WILL BE USED TO CREATE CODE HERE, NEITHER TO MODERATE THE COMMENTS.
 ```
-The intention is to use "offline" NLPs (_Natural Language Processors_), while avoiding LLMs (Large Language Models). The environmental, social, economic, and content quality degradation issues brought to us by the AI bubble demerits the use of LLMs and non deterministic queries. While these being an interesting tools; queries and prompts are detrimental for this script implementation (adding processing time and hard to debug randomness/hallucinations).
+The intention is to use "offline" NLPs (_Natural Language Processors_), while avoiding LLMs (_Large Language Models_). The environmental, social, economic, and content quality degradation issues brought to us by the AI bubble demerits the use of LLMs and non deterministic queries. While these being an interesting tools; queries and prompts are detrimental for this script implementation (adding processing time and hard to debug randomness/hallucinations).
+
+<br>
 
 ## Important Notes
 The main purpose of this script is to use Youtube API, but the _[daily usage quota](https://developers.google.com/youtube/v3/determine_quota_cost)_ for the API has to be taken into account while using it.
@@ -37,31 +39,40 @@ Some key info:
 That is why actions other than listing would be potentionaly redirected to the actual Youtube Studio pages, to save quota units.
 Since there is no way to check the used quota at any given time, other than opening **Google Cloud console**, the script will only notify that it reached the quota limit once it hits a ``quotaExceeded`` error message.
 
+<br>
+
 ## Installation Instructions
 
 This script uses ``spaCy`` NLP models that might need to be download manually.
 
-``python3 -m spacy download en_core_web_lg``    (probably required, almost 6gb) >>> OR JUST USE _lg INSTEAD <<<
+``python3 -m spacy download en_core_web_lg``
 
 If an error shows up due to the /tmp allocation not being big enough, this could be a workaround
 ``TMPDIR=/var/tmp python3 -m spacy download en_core_web_lg --no-cache-dir``
 
 I tried using ``en_core_web__trf``instead (a larger model, around ``6GB``), but is crashes due to the use of pytorch legacy functions.
 
-# Required external libraries
+<br>
 
-``dotenv`` (python-dotenv)
-``polars``
-``spaCy``
-``asent`` (spaCy sub-library)
-``googleapiclient.discovery`` (will require to generate a private API key)
-``PIL`` (Pillow)
-``numpy``
-``wordcloud``
+## Required external libraries
 
-## Recommended usecases
+| Library    | Description | License  |
+| :---:      | :--- | :---: |
+| ``dotenv`` | [python-dotenv](https://github.com/theskumar/python-dotenv) (to access .env variables) | BSD-3-Clause |
+| ``polars`` | [Polars](https://www.pola.rs/) dataFrames | MIT |
+| ``spacy``  | [spaCy](https://spacy.io/) (Industrial-strength NLP) | MIT |
+| ``asent``  | [Asent](https://spacy.io/universe/project/asent) spaCy sub-library (sentiment analysis) | MIT |
+| ``googleapiclient.discovery`` | [YouTube Data API](https://developers.google.com/youtube/v3)<br>(It will required to generate a private API key) | [YouTube API Services ToS](https://developers.google.com/youtube/terms/api-services-terms-of-service)<br> and [Developer Policies](https://developers.google.com/youtube/terms/developer-policies)<br>(not open source) |
+| ``PIL``    | [Pillow](https://python-pillow.github.io/) (Python Image Library) | MIT-CMU |
+| ``numpy``  | [NumPy](https://numpy.org/) (for quick computing and random number generation) | BSD-3-Clause<br>& 0BSD<br>& MIT<br>& Zlib<br>& CC0-1.0 |
+| ``wordcloud`` | [WordCloud](https://github.com/amueller/word_cloud) generator | MIT |
+
+<br>
+
+## Recommended use case
 Once a video get enough comments, disable comments and download all the root comments as backup.
 
+<br>
 
 ## Tentative Roadmap
 
