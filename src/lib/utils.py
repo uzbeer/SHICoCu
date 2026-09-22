@@ -22,7 +22,7 @@ def sanitize(filepath: str, dir = "", ext = "", fix_dir = False) -> str | None:
     if filepath.endswith(("/", "\\")):
         raise ValueError(f"Invalid path: {filepath} must point a filename.")
 
-    if not ext.startswith("."):
+    if ext and (not ext.startswith(".")):
         ext = f".{ext}"
 
     if not filepath.endswith(ext):

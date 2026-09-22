@@ -33,6 +33,10 @@ class NLP:
         for pipe in pipes:
             self.nlp.add_pipe(pipe)
 
+        # List of UPOS tags to exclude (Required during cloud generation)
+        self.excluded_pos = {"PUNCT", "DET", "CCONJ", "SCONJ", "AUX", "ADP", "ADV", "NUM", "PRON"}
+        self.allowed_symbols = {"$", "£", "€", "¥"}
+
     def _nlp(self, text):
         clean_text = "".join(
             c for c in text
@@ -64,6 +68,20 @@ class NLP:
         if not scores:
             return None
         return sum(scores) / len(scores)
+
+    def to_lemmas(self, text) -> list[str]:
+        if text is None:
+            return []
+        doc = self._nlp(text)
+
+        return [
+            token.lemma_.lower()
+            for token in doc
+            if token.pos_ not in self.excluded_pos
+            and not token.is_stop
+            and (token.lemma_.isalnum() or token.lemma_ in self.allowed_symbols)
+          ]
+
 #################################
 # Globals
 
@@ -72,11 +90,43 @@ youtube = None
 t0 = None
 
 def generate_cloud(df, filename: str):
-    WordCloud = extmodule(wordcloud, "WordCloud")
-    Counter = extmodule(collections, "Counter")
-    Image =extmodule(PIL, "Image")
-    ImageDraw =extmodule(PIL, "ImageDraw")
-    np = extmodule(numpy)
+    WordCloud = extmodule("wordcloud", "WordCloud")
+    Counter = extmodule("collections", "Counter")
+    Image =extmodule("PIL", "Image")
+    # ImageDraw =extmodule(PIL, "ImageDraw")
+    np = extmodule("numpy")
+
+    tokenizer = NLP()
+
+    lemmas = dict(Counter(
+        df.select(
+            pl.col("text")
+            .map_elements(tokenizer.to_lemmas, return_dtype=pl.List(pl.String))
+            .explode(empty_as_null=False)
+          ).to_series().to_list()
+      ))
+
+    mask_array = np.array(Image.open("./data/cloud.png"))
+    def colorize_cloud(word, font_size, position, orientation, random_state=None, **kwargs):
+        return f"hsl({42 + np.random.randint(-5, 5)}, 85%, {np.random.randint(45, 86)}%)"
+
+    wc = WordCloud(
+        width=1000,
+        height=1000,
+        background_color=None,
+        mode="RGBA",
+        mask=mask_array,
+        color_func=colorize_cloud,
+        prefer_horizontal=1.0,
+        collocations=False
+      ).generate_from_frequencies(lemmas)
+
+    cloud_file = sanitize(filename, dir="./output/", ext=".png", fix_dir=True)
+    # print(cloud_file)
+    wc.to_file(cloud_file)
+
+    print(f"WordCloud done: file://{cloud_file}")
+
 
 async def __init_yt() -> str:
     global yt_api_key
@@ -264,10 +314,11 @@ NOTES:
 
         ####### PROCESSING #####
         # Check if we were asked for --cloud, normal results, or to skip them
-        if ("--cloud" in par.tokens) or ("--skip" in par.tokens):
-            if ("--cloud" in par.tokens):
+        if ("--cloud" in par) or ("--skip" in par):
+            if ("--cloud" in par):
                 if (verbose):
-                    ora2("Starting words cloud generation...")
+                    ora2("Starting words cloud generation...\n")
+                    rst()
                 generate_cloud(df, par("--cloud") or par("--id") or par("--file"))
             return
         pipes = NLP(['sentencizer', 'asent_en_v1'])
